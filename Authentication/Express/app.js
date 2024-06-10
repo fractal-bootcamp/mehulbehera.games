@@ -9,7 +9,7 @@ const users = [
     {
         id: 1,
         email: "nancy@gmail.com",
-        password: "stupidpassword"
+        password: "baseball"
     },
     {
         id: 2,
@@ -22,12 +22,38 @@ const users = [
 //send to dashboard page
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
-    //res.send('Hello From Get JS');
 });
 
 app.get('/login', (req, res) => {
     res.sendFile(__dirname + '/public/login.html');
-  });
+});
+
+app.post('/dashboard', (req, res) => {
+    //res.sendFile(__dirname + '/public/dashboard.html');
+    res.send("SUCCESS");
+});
+
+app.post('/login', (req, res) => {
+    // Insert Login Code Here
+
+    const user = users.find(user => ((user.email === req.body.email) && (user.password === req.body.password)));
+    if (user) {
+        console.log("SUCCESS");
+        console.log("Email", req.body.email);
+        console.log("Password", req.body.password);
+        res.send("SUCCESS");
+    }
+    else {
+        console.log("FAILED");
+        console.log("Email", req.body.email);
+        console.log("Password", req.body.password);
+        res.send("failed login");
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Example app listening on port ${port}`);
+});
 
 // app.post('/', (req, res) => {
 //     console.log("*****REQ BODY******");
@@ -49,14 +75,3 @@ app.get('/login', (req, res) => {
 //         res.send("failed login");
 //     }
 // });
-
-app.post('/login', (req, res) => {
-    // Insert Login Code Here
-    let username = req.body.username;
-    let password = req.body.password;
-    res.send(`Username: ${username} Password: ${password}`);
-  });
-
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
-});
