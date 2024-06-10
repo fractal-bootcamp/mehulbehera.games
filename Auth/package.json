@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "@types/node": "^20.14.2"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node": "^20.14.0"
+  }
+}
