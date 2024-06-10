@@ -2,9 +2,13 @@ const express = require('express');
 const app = express()
 const port = 3000
 var bodyParser = require('body-parser')
+var cookieParser = require('cookie-parser')
 
-
+//middleware
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+
 const users = [
     {
         id: 1,
@@ -25,7 +29,16 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-    res.sendFile(__dirname + '/public/login.html');
+    if(req.cookies.loggedin == "true"){
+
+        res.send("Success")
+
+    }
+    else{
+
+        res.sendFile(__dirname + '/public/login.html');
+        
+    }
 });
 
 app.post('/dashboard', (req, res) => {
@@ -35,12 +48,12 @@ app.post('/dashboard', (req, res) => {
 
 app.post('/login', (req, res) => {
     // Insert Login Code Here
-
     const user = users.find(user => ((user.email === req.body.email) && (user.password === req.body.password)));
     if (user) {
         console.log("SUCCESS");
         console.log("Email", req.body.email);
         console.log("Password", req.body.password);
+        res.cookie("loggedin", "true");
         res.send("SUCCESS");
     }
     else {
