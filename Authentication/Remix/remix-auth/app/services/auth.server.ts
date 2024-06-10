@@ -3,6 +3,7 @@ import { Authenticator } from "remix-auth";
 import { sessionStorage } from "~/services/session.server";
 import { FormStrategy } from "remix-auth-form";
 
+
 interface UserAuth{
 
     id:number,
@@ -38,14 +39,24 @@ export let authenticator = new Authenticator<UserAuth>(sessionStorage);
 
 async function login(email:string,password:string){
 
+    console.log("ran")
     const user = users.find(user => ((user.email === email) && (user.password === password)));
     if(user){
-
+        console.log("ran")
+        console.log(email)
+        console.log(password)
+        console.log(user)
+      
         return user;
 
+    }else{
+
+        throw new Error();
+
     }
-    return users[0];
 }
+
+//what to do if user fails login
 
 // Tell the Authenticator to use the form strategy
 authenticator.use(
