@@ -15,6 +15,17 @@ import { firebaseConfig } from "../firebase.config";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+function sendAuthorizedRequest(
+  input: string | URL | globalThis.Request,
+  config?: RequestInit
+) {
+  const token = auth.currentUser?.getIdToken();
+  if (config?.headers) {
+    config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
+  }
+  return fetch(input, config);
+}
+
 function App() {
   const [inputEmail, setEmail] = useState("");
   const [inputPassword, setPassword] = useState("");
@@ -27,9 +38,16 @@ function App() {
     console.log("inputedEmail", inputedEmail);
     console.log("inputedPassword", inputedPassword);
     createUserWithEmailAndPassword(auth, inputedEmail, inputedPassword)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
         // Signed up
         const user = userCredential.user;
+        const response = await sendAuthorizedRequest(
+          "http://localhost:3005/user",
+          {
+            method: "POST",
+            body: JSON.stringify({}),
+          }
+        );
         console.log(user);
         // ...
       })
