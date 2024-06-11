@@ -35,8 +35,6 @@ function App() {
 
   //handle register pressed
   function register() {
-    console.log("inputedEmail", inputEmail);
-    console.log("inputedPassword", inputPassword);
     const email = inputEmail;
     const password = inputPassword;
     createUserWithEmailAndPassword(auth, email, password)
@@ -59,8 +57,6 @@ function App() {
 
   //handle login pressed
   function login() {
-    console.log("inputedEmail", inputEmail);
-    console.log("inputedPassword", inputPassword);
     const email = inputEmail;
     const password = inputPassword;
     signInWithEmailAndPassword(auth, inputEmail, inputPassword)
