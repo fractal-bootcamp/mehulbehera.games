@@ -15,6 +15,8 @@ import { firebaseConfig } from "../firebase.config";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+//takes in Request with params (input, config) then adds the token to the config headers
+//this gets put in a fetch which means it goes to the backend
 function sendAuthorizedRequest(
   input: string | URL | globalThis.Request,
   config?: RequestInit
@@ -23,6 +25,7 @@ function sendAuthorizedRequest(
   if (config?.headers) {
     config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
   }
+  //send token to server
   return fetch(input, config);
 }
 
@@ -30,23 +33,19 @@ function App() {
   const [inputEmail, setEmail] = useState("");
   const [inputPassword, setPassword] = useState("");
 
-  const [inputedEmail, setInputedEmail] = useState("");
-  const [inputedPassword, setInputedPassword] = useState("");
-
   //handle register pressed
   function register() {
-    console.log("inputedEmail", inputedEmail);
-    console.log("inputedPassword", inputedPassword);
-    createUserWithEmailAndPassword(auth, inputedEmail, inputedPassword)
+    console.log("inputedEmail", inputEmail);
+    console.log("inputedPassword", inputPassword);
+    const email = inputEmail;
+    const password = inputPassword;
+    createUserWithEmailAndPassword(auth, email, password)
       .then(async (userCredential) => {
         // Signed up
         const user = userCredential.user;
         const response = await sendAuthorizedRequest(
           "http://localhost:3005/user",
-          {
-            method: "POST",
-            body: JSON.stringify({}),
-          }
+          { method: "POST", body: JSON.stringify({}) }
         );
         console.log(user);
         // ...
@@ -60,9 +59,11 @@ function App() {
 
   //handle login pressed
   function login() {
-    console.log("inputedEmail", inputedEmail);
-    console.log("inputedPassword", inputedPassword);
-    signInWithEmailAndPassword(auth, inputedEmail, inputedPassword)
+    console.log("inputedEmail", inputEmail);
+    console.log("inputedPassword", inputPassword);
+    const email = inputEmail;
+    const password = inputPassword;
+    signInWithEmailAndPassword(auth, inputEmail, inputPassword)
       .then((userCredential) => {
         // Signed in
         const user = userCredential.user;
@@ -99,10 +100,6 @@ function App() {
         <button
           className="btn"
           onClick={() => {
-            //setting inputed email/pass components
-            setInputedEmail(inputEmail);
-            setInputedPassword(inputPassword);
-
             //VALIDATE LOGIN
             login();
           }}
@@ -113,8 +110,6 @@ function App() {
           className="btn"
           onClick={() => {
             //setting inputed email/pass components
-            setInputedEmail(inputEmail);
-            setInputedPassword(inputPassword);
 
             //Register
             register();
@@ -123,8 +118,8 @@ function App() {
           Register
         </button>
       </div>
-      <div>Current Login Email: {inputedEmail}</div>
-      <div>Current Login Password: {inputedPassword}</div>
+      <div>Current Login Email: {inputEmail}</div>
+      <div>Current Login Password: {inputPassword}</div>
     </div>
   );
 }
