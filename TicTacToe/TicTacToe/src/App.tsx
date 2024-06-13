@@ -3,11 +3,6 @@ import "./App.css";
 
 const emptyBoard: string[] = ["", "", "", "", "", "", "", "", ""];
 
-interface player {
-  //X or O
-  piece: string;
-}
-
 interface winnerOutput {
   //X, O, null
   winningPiece: string | null;
@@ -68,23 +63,11 @@ function App() {
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [winner, setWinner] = useState("");
 
-  // useEffect(() => {
-  //   if (currentPlayer === "O") {
-  //     const index = getOpponentRandomMove();
-  //     let newBoard = { ...board };
-
-  //     if (newBoard[index] === "") {
-  //       newBoard[index] = currentPlayer;
-  //       setBoard(newBoard);
-  //     } else {
-  //       //user put invalid move
-  //       return;
-  //     }
-  //   }
-  // }, [board]);
-
   useEffect(() => {
-    console.log("UseEffect Ran");
+    if (currentPlayer === "O" && winner === "") {
+      const index = getOpponentMove(board, currentPlayer);
+      setPieceOnBoard(index);
+    }
   }, [board]);
 
   const togglePlayer = () => {
@@ -92,250 +75,142 @@ function App() {
   };
 
   function setPieceOnBoard(index: number) {
-    let newBoard = { ...board };
+    let newBoard = [...board];
+
     if (newBoard[index] === "") {
       newBoard[index] = currentPlayer;
       setBoard(newBoard);
 
       //switch players - for 2 players
       togglePlayer();
+
+      const output = checkWinState(newBoard);
+
+      const winningOutcome = output.winningOutcome;
+      const winningPiece = output.winningPiece;
+
+      //if won - ADD STOP PLAYERS FROM WINNING
+      if (winningOutcome === "WIN") {
+        setWinner(winningPiece + "    WINS");
+      } else if (winningOutcome === "TIE") {
+        setWinner("TIE");
+      }
     }
   }
 
-  const minimax = (
-    board: string[],
-    maximize: boolean,
-    player: "X" | "O",
+  //params: board, depth(how many layers deep), maxmize (boolean whether or not to max), player ("X"|"O")
+  //returns score of a board in a terminal case
+  function minMax(
+    boardToMinMax: typeof board,
     depth: number,
-    alpha: number = -Infinity,
-    beta: number = Infinity,
-    maxDepth: number = 20 // Limiting depth to 10
-  ): { score: number; depth: number; winState: winnerOutput } => {
-    const winState = checkWinState(board);
+    maximize: boolean,
+    player: string
+  ): number {
+    //Base Case: If game is in terminal state evaluate board and return a score
+    const output = checkWinState(boardToMinMax);
 
-    // IF TERMINAL, return a score
-    if (winState.winningOutcome !== null) {
-      // IF WIN, check if it's the player or the opponent
+    const winningOutcome = output.winningOutcome;
+    const winningPiece = output.winningPiece;
 
-      if (winState.winningOutcome === "WIN") {
-        if (winState.winningPiece === player) {
-          // If the player wins, return this positive score (we should do this)
-          return { score: maxDepth - depth, depth, winState };
+    if (winningOutcome !== null) {
+      if (winningOutcome === "WIN") {
+        //player wins - return a positive score based on how many layers deep they win
+        if (winningPiece === player) {
+          return 10 - depth;
         }
-
-        // If the opponent wins, return this negative score (we should avoid this)
-        return { score: depth - maxDepth, depth, winState };
+        //opponent wins - return a negative score based on how many layers deep
+        else {
+          return depth - 10;
+        }
       }
-      if (winState.winningPiece === "TIE") {
-        return { score: 0, depth, winState };
+      //if a tie - return 0
+      if (winningOutcome === "TIE") {
+        return 0;
       }
     }
 
-    // Stop recursion if max depth is reached
-    if (depth >= maxDepth) {
-      return { score: 0, depth, winState };
-    }
+    //Recursive Function
 
+    //set opponent
     const opponent = player === "X" ? "O" : "X";
 
+    //maximizing half
     if (maximize) {
       let bestScore = -Infinity;
 
-      for (let i = 0; i < board.length; i++) {
-        if (board[i] === "") {
-          const newBoard = [...board];
+      //for all empty spots on board
+      for (let i = 0; i < boardToMinMax.length; i++) {
+        if (boardToMinMax[i] === "") {
+          //set piece on potential board
+          const newBoard = [...boardToMinMax];
           newBoard[i] = opponent;
 
-          // perform minimax on the new board
-          const { score } = minimax(
-            newBoard,
-            false,
-            player,
-            depth + 1,
-            alpha,
-            beta,
-            maxDepth
-          );
+          //get minMaxScore on potential board
+          const score = minMax(newBoard, depth + 1, false, player);
           bestScore = Math.max(score, bestScore);
-
-          alpha = Math.max(alpha, bestScore);
-          if (beta <= alpha) {
-            break; // Beta cut-off
-          }
         }
       }
-      return { score: bestScore, depth, winState };
-    } else {
+      return bestScore;
+    }
+    //minimizing half
+    else {
       let bestScore = Infinity;
 
-      for (let i = 0; i < board.length; i++) {
-        if (board[i] === "") {
-          const newBoard = [...board];
+      //get all potential boards from empty spots
+      for (let i = 0; i < boardToMinMax.length; i++) {
+        if (boardToMinMax[i] === "") {
+          const newBoard = [...boardToMinMax];
           newBoard[i] = player;
-          const { score } = minimax(
-            newBoard,
-            true,
-            player,
-            depth + 1,
-            alpha,
-            beta,
-            maxDepth
-          );
+
+          const score = minMax(newBoard, depth + 1, true, player);
           bestScore = Math.min(score, bestScore);
-          beta = Math.min(beta, bestScore);
-          if (beta <= alpha) {
-            break; // Alpha cut-off
-          }
         }
       }
-      return { score: bestScore, depth, winState };
-    }
-  };
 
-  function getOpponentRandomMove() {
-    let arrayEmpty = [];
-    for (let i = 0; i < 9; i++) {
-      if (board[i] === "") {
-        arrayEmpty.push(i);
-      }
+      return bestScore;
     }
-
-    const index = arrayEmpty[Math.floor(Math.random() * arrayEmpty.length)];
-    return index;
   }
 
-  //Jakes get best move
-  function getBestMove(board: string[], player: "X" | "O") {
-    const scores: {
-      score: number;
-      index: number;
-      details: {
-        score: number;
-        depth: number;
-        winState: winnerOutput;
-      };
-    }[] = [];
-    for (let i = 0; i < board.length; i++) {
-      // Decided who to test
-
-      // if the space is empty
-      if (board[i] === "") {
-        // create the potential board to score
-        const potentialBoard = [...board];
-
-        // assign the player
+  //params: Takes in current board and current player(opponent)
+  //returns: index of best Move
+  function getOpponentMove(boardToMoveOn: string[], player: string): number {
+    let scores: { score: number; index: number }[] = [];
+    //get the scores of all potential terminal states based on params
+    for (let i = 0; i < boardToMoveOn.length; i++) {
+      if (boardToMoveOn[i] === "") {
+        const potentialBoard = [...boardToMoveOn];
         potentialBoard[i] = player;
-
-        // score the board
-        const score = minimax(potentialBoard, true, player, 0);
-        //   console.log(score.score)
-
-        scores.push({ score: score.score, index: i, details: score });
+        const scoreFromMinMax = minMax(potentialBoard, 0, true, player);
+        //console.log("scoreFrom MinMax", scoreFromMinMax);
+        scores.push({ score: scoreFromMinMax, index: i });
       }
     }
-    console.log(
-      scores.map((score) => [score.index, score.score, score.details.depth])
-    );
 
-    const bestMove =
-      scores.length &&
-      scores.reduce((acc, curr) => {
-        if (acc.score > curr.score) {
-          return acc;
-        }
-        return curr;
-      });
-    return bestMove;
-  }
+    // console.log("scores: ", scores);
 
-  function getOpponentMove(): number {
-    console.log("ran getOpponent Move");
-    const opponentPiece = "O";
-    let indexOfMaxScore = -Infinity;
+    //get the index of the highest score - best move
+    let maxIndex = -1;
     let maxScore = -Infinity;
-    for (let i = 0; i < board.length; i++) {
-      // Decided who to test
 
-      //Index of Max Score Potential board
+    for (let i = 0; i < scores.length; i++) {
+      const scoreToEval = scores[i].score;
+      const indexToEval = scores[i].index;
 
-      // if the space is empty
-      if (board[i] === "") {
-        // create the potential board to score
-        const potentialBoard = [...board];
-
-        // set piece in board
-        potentialBoard[i] = opponentPiece;
-
-        // score the board
-        const score = minimax(potentialBoard, true, opponentPiece, 0);
-        console.log(score.score);
-
-        if (score.score > maxScore) {
-          indexOfMaxScore = i;
-          maxScore = score.score;
-        }
+      if (maxScore < scoreToEval) {
+        maxScore = scoreToEval;
+        maxIndex = indexToEval;
       }
     }
-    console.log(indexOfMaxScore);
-    return indexOfMaxScore;
+
+    return maxIndex;
   }
-
-  //play opponent
-  // function opponentMove(boardToMove: typeof board) {
-  //   console.log("ran opponent Move");
-  //   const opponentPiece = "O";
-  //   const index = getOpponentMove();
-
-  //   if (boardToMove[index] === "") {
-  //     boardToMove[index] = opponentPiece;
-  //     setBoard(boardToMove);
-  //   } else {
-  //     //user put invalid move
-  //     return;
-  //   }
-  // }
 
   function handlePress(e: MouseEvent<HTMLButtonElement>) {
-    //change "ghost board" && checkValid
-    let newBoard = { ...board };
     const buttonID = parseInt(e.currentTarget.id);
-    if (newBoard[buttonID] === "") {
-      newBoard[buttonID] = currentPlayer;
-      setBoard(newBoard);
-    } else {
-      //user put invalid move
-      return;
-    }
+    //add user piece
+    setPieceOnBoard(buttonID);
 
     togglePlayer();
-
-    //check winner
-    let output = checkWinState(newBoard);
-
-    let winningOutcome = output.winningOutcome;
-    let winningPiece = output.winningPiece;
-
-    //if won - ADD STOP PLAYERS FROM WINNING
-    if (winningOutcome === "WIN") {
-      setWinner(winningPiece + "    WINS");
-    } else if (winningOutcome === "TIE") {
-      setWinner("TIE");
-    }
-
-    //For one player - AI Move
-
-    //check winner
-    output = checkWinState(board);
-
-    winningOutcome = output.winningOutcome;
-    winningPiece = output.winningPiece;
-
-    //if won - ADD STOP PLAYERS FROM WINNING
-    if (winningOutcome === "WIN") {
-      setWinner(winningPiece + "    WINS");
-    } else if (winningOutcome === "TIE") {
-      setWinner("TIE");
-    }
   }
 
   const hasWon = winner !== "";
