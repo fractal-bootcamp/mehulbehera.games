@@ -62,9 +62,18 @@ function App() {
   const [board, setBoard] = useState(emptyBoard);
   const [currentPlayer, setCurrentPlayer] = useState("X");
   const [winner, setWinner] = useState("");
+  const [singlePlayer, setSinglePlayer] = useState(false);
+
+  //numWins: {X Wins: 0, Ties, O Wins}
+  const [numXWins, setXWins] = useState(0);
+  const [numOWins, setOWins] = useState(0);
+  const [numTies, setTies] = useState(0);
+
+  //progress
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (currentPlayer === "O" && winner === "") {
+    if (currentPlayer === "O" && winner === "" && singlePlayer === false) {
       const index = getOpponentMove(board, currentPlayer);
       setPieceOnBoard(index);
     }
@@ -83,6 +92,7 @@ function App() {
 
       //switch players - for 2 players
       togglePlayer();
+      setProgress(progress + 1 / 9);
 
       const output = checkWinState(newBoard);
 
@@ -91,9 +101,17 @@ function App() {
 
       //if won - ADD STOP PLAYERS FROM WINNING
       if (winningOutcome === "WIN") {
+        setProgress(1);
         setWinner(winningPiece + "    WINS");
+        if (winningPiece === "X") {
+          setXWins(numXWins + 1);
+        } else {
+          setOWins(numOWins + 1);
+        }
       } else if (winningOutcome === "TIE") {
+        setProgress(1);
         setWinner("TIE");
+        setTies(numTies + 1);
       }
     }
   }
@@ -181,12 +199,9 @@ function App() {
         const potentialBoard = [...boardToMoveOn];
         potentialBoard[i] = player;
         const scoreFromMinMax = minMax(potentialBoard, 0, true, player);
-        //console.log("scoreFrom MinMax", scoreFromMinMax);
         scores.push({ score: scoreFromMinMax, index: i });
       }
     }
-
-    // console.log("scores: ", scores);
 
     //get the index of the highest score - best move
     let maxIndex = -1;
@@ -209,57 +224,89 @@ function App() {
     const buttonID = parseInt(e.currentTarget.id);
     //add user piece
     setPieceOnBoard(buttonID);
-
-    togglePlayer();
   }
 
   const hasWon = winner !== "";
 
+  let bgColor = "bg-gray-200";
+
   return (
     <>
-      <div>
-        <div id="row1">
-          <button id="0" disabled={hasWon} onClick={(e) => handlePress(e)}>
-            {board[0]}
+      <section className="grid grid-cols-3 place-items-center">
+        {board.map((tile, index) => (
+          <button
+            className={
+              " btn my-2 hover:bg-gray-300 w-44 h-44 btn-lg text-7xl disabled:bg-orange-300 disabled:text-black text-black " +
+              bgColor
+            }
+            id={index.toString()}
+            disabled={hasWon}
+            onClick={(e) => handlePress(e)}
+          >
+            {board[index]}
           </button>
-          <button id="1" disabled={hasWon} onClick={(e) => handlePress(e)}>
-            {board[1]}
-          </button>
-          <button id="2" disabled={hasWon} onClick={(e) => handlePress(e)}>
-            {board[2]}
-          </button>
-        </div>
-        <div id="row2">
-          <button id="3" disabled={hasWon} onClick={(e) => handlePress(e)}>
-            {board[3]}
-          </button>
-          <button id="4" disabled={hasWon} onClick={(e) => handlePress(e)}>
-            {board[4]}
-          </button>
-          <button id="5" disabled={hasWon} onClick={(e) => handlePress(e)}>
-            {board[5]}
-          </button>
-        </div>
-        <div id="row3">
-          <button id="6" disabled={hasWon} onClick={(e) => handlePress(e)}>
-            {board[6]}
-          </button>
-          <button id="7" disabled={hasWon} onClick={(e) => handlePress(e)}>
-            {board[7]}
-          </button>
-          <button id="8" disabled={hasWon} onClick={(e) => handlePress(e)}>
-            {board[8]}
-          </button>
-        </div>
-      </div>
+        ))}
+      </section>
+
+      <section className="grid grid-cols-3 gap-1 mx-auto mb-10 place-items-center">
+        <button
+          className="btn m-2 bg-gray-200 hover:bg-gray-200 btn-lg w-44 disabled:bg-orange-300 text-black disabled:text-black "
+          id="XWinButton"
+          disabled={hasWon}
+        >
+          X Won: {numXWins}
+        </button>
+        <button
+          className="btn m-2 bg-gray-200 hover:bg-gray-200 btn-lg w-44 disabled:bg-orange-300 text-black disabled:text-black "
+          id="Tie"
+          disabled={hasWon}
+        >
+          Ties: {numTies}
+        </button>
+        <button
+          className="btn m-2 bg-gray-200 hover:bg-gray-200 btn-lg w-44 disabled:bg-orange-300 text-black disabled:text-black "
+          id="OWinButton"
+          disabled={hasWon}
+        >
+          O Won: {numOWins}
+        </button>
+      </section>
+
       <button
+        className="btn m-2 btn-info btn-lg disabled:bg-red-300 w-44 hover:bg-gray-300 bg-gray-200"
         onClick={() => {
-          setBoard(emptyBoard), setWinner("");
+          setBoard(emptyBoard),
+            setWinner(""),
+            setCurrentPlayer("X"),
+            setProgress(0);
         }}
       >
-        Clear
+        {!winner ? "Reset" : "Next Game"}
       </button>
-      <div>Outcome: {winner}</div>
+
+      <div>
+        <div>Outcome: {winner}</div>
+        <progress className="progress w-56" value={progress}></progress>
+      </div>
+
+      <label className="swap swap-flip text-9xl">
+        <input type="checkbox" onClick={() => setSinglePlayer(!singlePlayer)} />
+
+        <div className="swap-on">🙋🏾‍♂️</div>
+        <div className="swap-off">🤖</div>
+      </label>
+
+      {!winner && <div data-modal-show="winner_modal"></div>}
+
+      <dialog id="winner_modal" className="modal">
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Hello!</h3>
+          <p className="py-4">Press ESC key or click outside to close</p>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
     </>
   );
 }
