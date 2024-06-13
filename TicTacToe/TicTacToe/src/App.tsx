@@ -101,6 +101,7 @@ function App() {
 
       //if won - ADD STOP PLAYERS FROM WINNING
       if (winningOutcome === "WIN") {
+        document.getElementById("winner_modal")!.showModal();
         setProgress(1);
         setWinner(winningPiece + "    WINS");
         if (winningPiece === "X") {
@@ -109,6 +110,7 @@ function App() {
           setOWins(numOWins + 1);
         }
       } else if (winningOutcome === "TIE") {
+        document.getElementById("winner_modal")!.showModal();
         setProgress(1);
         setWinner("TIE");
         setTies(numTies + 1);
@@ -228,80 +230,143 @@ function App() {
 
   const hasWon = winner !== "";
 
-  let bgColor = "bg-gray-200";
+  //let bgColor = "bg-gray-200";
+
+  function getWinner(): { winningPiece: string; winningCoords: number[] } {
+    //all possible winning positions
+    const possibleWinnerCoords = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+
+    for (let i = 0; i < 8; i++) {
+      const winningCoords = possibleWinnerCoords[i];
+      if (
+        board[winningCoords[0]] === board[winningCoords[1]] &&
+        board[winningCoords[0]] === board[winningCoords[2]] &&
+        board[winningCoords[0]] !== ""
+      ) {
+        //someone won
+        //gets X or O
+        const winningPiece = board[winningCoords[0]];
+
+        return {
+          winningPiece: winningPiece,
+          winningCoords: [winningCoords[0], winningCoords[1], winningCoords[2]],
+        };
+      }
+    }
+
+    return { winningPiece: "none", winningCoords: [0, 1, 2] };
+  }
+
+  function bgColor(elementInSquare: string, index: number): string {
+    if (winner) {
+      const output = getWinner();
+      const winningCoords = output.winningCoords;
+      const winningPiece = output.winningPiece;
+
+      if (winningCoords.includes(index)) {
+        if (winningPiece === "X") {
+          return "bg-blue-300 hover:bg-blue-400 disabled:bg-green-300";
+        } else if (winningPiece === "O") {
+          return "bg-red-300 hover:bg-red-400 disabled:bg-green-300";
+        }
+      }
+    }
+
+    if (elementInSquare === "X") {
+      return "bg-blue-300 hover:bg-blue-400 disabled:bg-blue-400";
+    } else if (elementInSquare === "O") {
+      return "bg-red-300 hover:bg-red-400 disabled:bg-red-400";
+    }
+
+    return "bg-gray-200 hover:bg-gray-300 disabled:bg-gray-400";
+  }
 
   return (
     <>
-      <section className="grid grid-cols-3 place-items-center">
-        {board.map((tile, index) => (
+      <div className="flex flex-row gap-5">
+        <div>
+          <section className="grid grid-cols-3 gap-1 max-w-2xl aspect-square place-items-center">
+            {board.map((tile, index) => (
+              <button
+                className={
+                  " btn border border-black disabled:border disabled:border-black h-full w-full btn-lg text-7xl  disabled:text-black text-black " +
+                  bgColor(board[index], index)
+                }
+                id={index.toString()}
+                disabled={hasWon}
+                onClick={(e) => handlePress(e)}
+              >
+                {board[index]}
+              </button>
+            ))}
+          </section>
+
+          <section className="grid grid-cols-3 gap-1 max-w-2xl place-items-center">
+            <button
+              className="btn m-2 bg-gray-200 hover:bg-gray-200 disabled:bg-gray-200 btn-lg w-44  text-black disabled:text-black "
+              id="XWinButton"
+              disabled={hasWon}
+            >
+              X Won: {numXWins}
+            </button>
+            <button
+              className="btn m-2 bg-gray-200 hover:bg-gray-200 disabled:bg-gray-200 btn-lg w-44  text-black disabled:text-black "
+              id="Tie"
+              disabled={hasWon}
+            >
+              Ties: {numTies}
+            </button>
+            <button
+              className="btn m-2 bg-gray-200 hover:bg-gray-200 disabled:bg-gray-200 btn-lg w-44  text-black disabled:text-black "
+              id="OWinButton"
+              disabled={hasWon}
+            >
+              O Won: {numOWins}
+            </button>
+          </section>
+          <div>
+            <progress className="progress w-56" value={progress}></progress>
+          </div>
+        </div>
+
+        <div className="flex flex-col">
           <button
-            className={
-              " btn my-2 hover:bg-gray-300 w-44 h-44 btn-lg text-7xl disabled:bg-orange-300 disabled:text-black text-black " +
-              bgColor
-            }
-            id={index.toString()}
-            disabled={hasWon}
-            onClick={(e) => handlePress(e)}
+            className="btn m-2 btn-info btn-lg w-44 hover:bg-gray-300 bg-gray-200"
+            onClick={() => {
+              setBoard(emptyBoard),
+                setWinner(""),
+                setCurrentPlayer("X"),
+                setProgress(0);
+            }}
           >
-            {board[index]}
+            {!winner ? "Reset" : "Next Game"}
           </button>
-        ))}
-      </section>
 
-      <section className="grid grid-cols-3 gap-1 mx-auto mb-10 place-items-center">
-        <button
-          className="btn m-2 bg-gray-200 hover:bg-gray-200 btn-lg w-44 disabled:bg-orange-300 text-black disabled:text-black "
-          id="XWinButton"
-          disabled={hasWon}
-        >
-          X Won: {numXWins}
-        </button>
-        <button
-          className="btn m-2 bg-gray-200 hover:bg-gray-200 btn-lg w-44 disabled:bg-orange-300 text-black disabled:text-black "
-          id="Tie"
-          disabled={hasWon}
-        >
-          Ties: {numTies}
-        </button>
-        <button
-          className="btn m-2 bg-gray-200 hover:bg-gray-200 btn-lg w-44 disabled:bg-orange-300 text-black disabled:text-black "
-          id="OWinButton"
-          disabled={hasWon}
-        >
-          O Won: {numOWins}
-        </button>
-      </section>
+          <label className="swap swap-flip text-9xl">
+            <input
+              type="checkbox"
+              onClick={() => setSinglePlayer(!singlePlayer)}
+            />
 
-      <button
-        className="btn m-2 btn-info btn-lg disabled:bg-red-300 w-44 hover:bg-gray-300 bg-gray-200"
-        onClick={() => {
-          setBoard(emptyBoard),
-            setWinner(""),
-            setCurrentPlayer("X"),
-            setProgress(0);
-        }}
-      >
-        {!winner ? "Reset" : "Next Game"}
-      </button>
-
-      <div>
-        <div>Outcome: {winner}</div>
-        <progress className="progress w-56" value={progress}></progress>
+            <div className="swap-on">🙋🏾‍♂️</div>
+            <div className="swap-off">🤖</div>
+          </label>
+        </div>
       </div>
-
-      <label className="swap swap-flip text-9xl">
-        <input type="checkbox" onClick={() => setSinglePlayer(!singlePlayer)} />
-
-        <div className="swap-on">🙋🏾‍♂️</div>
-        <div className="swap-off">🤖</div>
-      </label>
-
-      {!winner && <div data-modal-show="winner_modal"></div>}
 
       <dialog id="winner_modal" className="modal">
         <div className="modal-box">
-          <h3 className="font-bold text-lg">Hello!</h3>
-          <p className="py-4">Press ESC key or click outside to close</p>
+          <h3 className="font-bold text-lg">WINNER!</h3>
+          <p className="py-4">{winner} won the game!</p>
         </div>
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
