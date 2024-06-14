@@ -1,7 +1,7 @@
 import { MouseEvent, MouseEventHandler, useEffect, useState } from "react";
 import "./App.css";
 import { Game } from "../server";
-import { Lobby } from "./pages/lobby";
+import { Link } from "react-router-dom";
 
 const emptyBoard: string[] = ["", "", "", "", "", "", "", "", ""];
 const serverPath = "http://localhost:4000";
@@ -135,6 +135,15 @@ function App() {
   useEffect(() => {
     if (winner !== "") {
       document.getElementById("winner_modal")!.showModal();
+      if (winner === "X") {
+        setXWins(numXWins + 1);
+      }
+      if (winner === "O") {
+        setOWins(numOWins + 1);
+      }
+      if (winner === null) {
+        setTies(numTies + 1);
+      }
     }
   }, [winner]);
 
@@ -260,14 +269,14 @@ function App() {
           >
             {!winner ? "Reset" : "Next Game"}
           </button>
-
-          <button
-            className="btn m-2 btn-info btn-lg w-44 hover:bg-gray-300 bg-gray-200"
-            onClick={() => "/lobby"}
-          >
-            Lobby
-          </button>
-          <a href="/pages/lobby"> GO TO LOBBY</a>
+          <Link to="/lobby">
+            <button
+              className="btn m-2 btn-info btn-lg w-44 hover:bg-gray-300 bg-gray-200"
+              onClick={() => {}}
+            >
+              Exit
+            </button>
+          </Link>
         </div>
       </div>
 

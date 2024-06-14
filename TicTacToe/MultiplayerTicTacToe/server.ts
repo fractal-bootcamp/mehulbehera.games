@@ -25,18 +25,40 @@ interface player {
 
 }
 
-// export type Game = {
-//     id: number,
-//     board: string[],
-//     currentPlayer: "X",
-//     winnerOutput: winnerOutput,
-//     player1: player,
-//     player2: player,
-// }
+export type Game = {
+    id: number,
+    board: string[],
+    currentPlayer: "X",
+    winnerOutput: winnerOutput,
+    player1: player,
+    player2: player,
+}
 
 let games = {
     ["1"]: {
         id: "1",
+        board: emptyBoard,
+        currentPlayer: "X",
+        winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
+        winPiece: "",
+        winOutcome: "",
+        winPlayer: "",
+        player1: { token: "X", id: "" },
+        player2: { token: "O", id: "" },
+    },
+    ["2"]: {
+        id: "2",
+        board: emptyBoard,
+        currentPlayer: "X",
+        winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
+        winPiece: "",
+        winOutcome: "",
+        winPlayer: "",
+        player1: { token: "X", id: "" },
+        player2: { token: "O", id: "" },
+    },
+    ["3"]: {
+        id: "3",
         board: emptyBoard,
         currentPlayer: "X",
         winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
@@ -63,6 +85,12 @@ app.get("/game/:id", (req, res) => {
     }
 
     res.json({ game: game });
+})
+
+app.get("/games", (req, res) => {
+
+    // If no game is found returnan error
+    res.json({ games });
 })
 
 interface winnerOutput {
