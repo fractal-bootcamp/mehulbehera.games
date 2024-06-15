@@ -206,7 +206,22 @@ app.post("/game/join", (req, res) => {
         return res.status(404).send("Game not found");
     }
 
-    games[id].player2 = player2Name
+    if (game.player1 === player2Name) {
+
+        res.json({ game });
+
+    }
+
+    if (games[id].player2 === "") {
+
+        games[id].player2 = player2Name
+
+    }
+    else {
+
+        //make it so 3rd partys - cant watch games?
+
+    }
 
 
 
@@ -260,7 +275,6 @@ app.post("/game/:id/move", (req, res) => {
         }
 
     }
-
 
 
     const output = checkWinState(game.board);
