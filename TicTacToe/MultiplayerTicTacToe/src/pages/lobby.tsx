@@ -135,7 +135,7 @@ function Lobby() {
                         joinAGame(game?.id, playerName);
                       }}
                     >
-                      {"Join Game with:" + game.player1}
+                      {"Join Game with:" + game?.player1}
                     </button>
                   </Link>
                 </div>
