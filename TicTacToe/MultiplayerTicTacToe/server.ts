@@ -34,40 +34,52 @@ export type Game = {
     player2: player,
 }
 
+let players = [];
+
+players.push("Jack")
+
+players.push("Jill")
+
+players.push("Ben")
+
+players.push("Bob")
+players.push("Eric")
+
+
 let games = {
-    ["1"]: {
-        id: "1",
-        board: emptyBoard,
-        currentPlayer: "X",
-        winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
-        winPiece: "",
-        winOutcome: "",
-        winPlayer: "",
-        player1: { token: "X", id: "" },
-        player2: { token: "O", id: "" },
-    },
-    ["2"]: {
-        id: "2",
-        board: emptyBoard,
-        currentPlayer: "X",
-        winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
-        winPiece: "",
-        winOutcome: "",
-        winPlayer: "",
-        player1: { token: "X", id: "" },
-        player2: { token: "O", id: "" },
-    },
-    ["3"]: {
-        id: "3",
-        board: emptyBoard,
-        currentPlayer: "X",
-        winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
-        winPiece: "",
-        winOutcome: "",
-        winPlayer: "",
-        player1: { token: "X", id: "" },
-        player2: { token: "O", id: "" },
-    },
+    // ["1"]: {
+    //     id: "1",
+    //     board: emptyBoard,
+    //     currentPlayer: "X",
+    //     winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
+    //     winPiece: "",
+    //     winOutcome: "",
+    //     winPlayer: "",
+    //     player1: "Jack",
+    //     player2: "Jill"
+    // },
+    // ["2"]: {
+    //     id: "2",
+    //     board: emptyBoard,
+    //     currentPlayer: "X",
+    //     winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
+    //     winPiece: "",
+    //     winOutcome: "",
+    //     winPlayer: "",
+    //     player1: "Ben",
+    //     player2: "Bob"
+    // },
+    // ["3"]: {
+    //     id: "3",
+    //     board: emptyBoard,
+    //     currentPlayer: "X",
+    //     winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
+    //     winPiece: "",
+    //     winOutcome: "",
+    //     winPlayer: "",
+    //     player1: "Eric",
+    //     player2: ""
+    // },
 };
 
 app.get("/", (req, res) => {
@@ -150,13 +162,48 @@ function checkWinState(b: typeof emptyBoard): winnerOutput {
     return { winningPiece, winningOutcome };
 }
 
+app.post("/game/create", (req, res) => {
+    //get game
+    const id = req.body.id;
+    const name = req.body.name;
+    let game = games[id];
+
+
+    console.log("name: " + name);
+    console.log("id " + id);
+
+    // If no game is found
+    if (!game) {
+        games = {
+            [id]: {
+                id: id,
+                board: ["", "", "", "", "", "", "", "", ""],
+                currentPlayer: "X",
+                winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
+                winPiece: "",
+                winOutcome: "",
+                winPlayer: "",
+                player1: name,
+                player2: ""
+            }, ...games
+        }
+
+    }
+
+
+    console.log(games)
+
+    res.json({ game });
+})
+
 app.post("/game/:id/move", (req, res) => {
     //get game
-    const id = req.params.id;
+    const id = req.body.id;
     const game = games[id];
 
+
     //get index of move
-    const { index } = req.body;
+    const index = req.body.index;
 
 
     // If no game is found
@@ -167,6 +214,9 @@ app.post("/game/:id/move", (req, res) => {
     //place player on square
     const player = game.currentPlayer;
     game.board[index] = player;
+
+    console.log("id, ", id)
+    console.log("index, ", index)
 
     //toggle player
     game.currentPlayer = player === "X" ? "O" : "X";

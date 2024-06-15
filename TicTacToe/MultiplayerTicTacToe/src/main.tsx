@@ -6,8 +6,13 @@ import "./index.css";
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Home from "./Home";
+import Play from "./Play";
 
 const router = createBrowserRouter([
+  {
+    path: "/Play",
+    element: <Play />,
+  },
   {
     path: "/",
     element: <Home />,
