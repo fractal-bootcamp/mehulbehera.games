@@ -250,7 +250,7 @@ function App() {
               id="XWinButton"
               disabled={hasWon}
             >
-              X Won: {numXWins}
+              {game?.player1} Won: {numXWins}
             </button>
             <button
               className="btn m-2 bg-gray-200 hover:bg-gray-200 disabled:bg-gray-200 btn-lg w-44  text-black disabled:text-black "
@@ -264,7 +264,7 @@ function App() {
               id="OWinButton"
               disabled={hasWon}
             >
-              O Won: {numOWins}
+              {game?.player2} Won: {numOWins}
             </button>
           </section>
           <div>

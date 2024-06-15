@@ -286,11 +286,11 @@ app.post("/game/:id/move", (req, res) => {
     if (game.winnerOutput.winningOutcome === "WIN") {
         if (game.winPiece === "X") {
 
-            game.winPlayer = "Player 1"
+            game.winPlayer = game.player1
 
         }
         else {
-            game.winPlayer = "Player 2"
+            game.winPlayer = game.player2
 
         }
 
