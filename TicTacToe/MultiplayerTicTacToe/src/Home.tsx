@@ -9,8 +9,7 @@ function Home() {
   return (
     <div className="flex justify-center">
       <div className="flex flex-col">
-        <h1 className="text-white">Your Current Username is: {playerName}</h1>
-        <h1 className="text-white">Enter New Username?:</h1>
+        <h1 className="text-white">Enter New Username:</h1>
         <input
           type="text"
           placeholder="Type here"

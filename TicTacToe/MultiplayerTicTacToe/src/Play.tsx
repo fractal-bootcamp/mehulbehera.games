@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 const serverPath = "http://localhost:4000";
+const emptyBoard: string[] = ["", "", "", "", "", "", "", "", ""];
 
 //interfaces
 interface winnerOutput {
@@ -57,6 +58,90 @@ async function createAGame(id: string, name: string) {
 }
 //***********Lobby Functions ***************** */
 
+//***********Game Functions ***************** */
+
+export function checkWinState(b: typeof emptyBoard): winnerOutput {
+  //all possible winning positions
+  const possibleWinnerCoords = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+  ];
+
+  for (let i = 0; i < 8; i++) {
+    //[0,1,2]
+    const winningCoords = possibleWinnerCoords[i];
+    if (
+      b[winningCoords[0]] === b[winningCoords[1]] &&
+      b[winningCoords[0]] === b[winningCoords[2]] &&
+      b[winningCoords[0]] !== ""
+    ) {
+      //someone won
+      //gets X or O
+      const winningPiece = b[winningCoords[0]];
+      const winningOutcome = "WIN";
+
+      return { winningPiece, winningOutcome };
+    }
+  }
+
+  //no one  won
+  const winningPiece = null;
+  let winningOutcome = null;
+
+  for (let i = 0; i < 9; i++) {
+    if (b[i] === "") {
+      //games unfinished
+      return { winningPiece, winningOutcome };
+    }
+  }
+
+  //final outcome: TIE
+  winningOutcome = "TIE";
+
+  return { winningPiece, winningOutcome };
+}
+
+//get game by id
+async function getGame(id: string) {
+  //get response from fetch (get request) -> same as calling curl http://localhost:4000/game/1
+  const response = await fetch(`${serverPath}/game/${id}`);
+  const json = await response.json();
+  return json;
+}
+
+//make a move
+async function makeAMove(id: string, index: number) {
+  //get response from fetch (post request) -> same as calling curl curl http://localhost:4000/game/1/move
+
+  console.log("id from MakeAMove, ", id);
+  console.log("index from MakeAMove, ", index);
+
+  const response = await fetch(`${serverPath}/game/${id}/move`, {
+    method: "POST",
+    body: JSON.stringify({ id, index }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const json = await response.json();
+  return json;
+}
+
+//reset game
+async function resetGame(id: string) {
+  const response = await fetch(`${serverPath}/game/${id}/reset`);
+  const json = await response.json();
+  return json;
+}
+
+//***********Game Functions ***************** */
+
 function Play() {
   //stores username
   const [userName, setUserName] = useState("");
@@ -87,6 +172,10 @@ function Play() {
   //consistently rerenders screen
   initializeGames();
   //***********Lobby Functions ***************** */
+
+  //***********Game Functions ***************** */
+
+  //***********Game Functions ***************** */
 
   return (
     <div className="justify-start">
@@ -136,7 +225,7 @@ function Play() {
                           <Link to={"/game/:gameId"}></Link>;
                         }}
                       >
-                        {"Join Game with:" + userName}
+                        {"Join Game with:" + game.player1}
                       </button>
                     </div>
                   </div>

@@ -169,8 +169,6 @@ app.post("/game/create", (req, res) => {
     let game = games[id];
 
 
-    console.log("name: " + name);
-    console.log("id " + id);
 
     // If no game is found
     if (!game) {
@@ -191,7 +189,26 @@ app.post("/game/create", (req, res) => {
     }
 
 
-    console.log(games)
+
+    res.json({ game });
+})
+
+app.post("/game/join", (req, res) => {
+    //get game
+    const id = req.body.id;
+    const player2Name = req.body.name;
+    let game = games[id];
+
+
+
+    // If no game is found
+    if (!game) {
+        return res.status(404).send("Game not found");
+    }
+
+    games[id].player2 = player2Name
+
+
 
     res.json({ game });
 })
@@ -200,6 +217,9 @@ app.post("/game/:id/move", (req, res) => {
     //get game
     const id = req.body.id;
     const game = games[id];
+    const currentPlayerName = req.body.playerName;
+
+    console.log(currentPlayerName)
 
 
     //get index of move
@@ -211,15 +231,37 @@ app.post("/game/:id/move", (req, res) => {
         return res.status(404).send("Game not found");
     }
 
-    //place player on square
-    const player = game.currentPlayer;
-    game.board[index] = player;
 
-    console.log("id, ", id)
-    console.log("index, ", index)
+    if (game.currentPlayer === "X") {
 
-    //toggle player
-    game.currentPlayer = player === "X" ? "O" : "X";
+        if (currentPlayerName === game.player1) {
+
+            //place player on square
+            const player = game.currentPlayer;
+            game.board[index] = player;
+
+            //toggle player
+            game.currentPlayer = player === "X" ? "O" : "X";
+
+        }
+
+    }
+    if (game.currentPlayer === "O") {
+
+        if (currentPlayerName === game.player2) {
+
+            //place player on square
+            const player = game.currentPlayer;
+            game.board[index] = player;
+
+            //toggle player
+            game.currentPlayer = player === "X" ? "O" : "X";
+
+        }
+
+    }
+
+
 
     const output = checkWinState(game.board);
 
@@ -227,7 +269,6 @@ app.post("/game/:id/move", (req, res) => {
     game.winnerOutput = output
     game.winPiece = game.winnerOutput.winningPiece
     game.winOutcome = game.winnerOutput.winningOutcome
-    console.log(game.winPiece)
     if (game.winnerOutput.winningOutcome === "WIN") {
         if (game.winPiece === "X") {
 
@@ -240,7 +281,6 @@ app.post("/game/:id/move", (req, res) => {
         }
 
     }
-    console.log("game.winplayer, ", game.winPlayer)
 
     //return game state
     res.json({ game });

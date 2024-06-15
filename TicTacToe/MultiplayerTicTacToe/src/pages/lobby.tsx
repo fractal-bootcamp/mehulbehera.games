@@ -1,11 +1,10 @@
 import { useAtom } from "jotai";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { playerNameAtom } from "../state";
+import { currentGameID, playerNameAtom } from "../state";
+import { gameIDToAdd } from "../state";
 
 const serverPath = "http://localhost:4000";
-
-const currentPlayer = "Jasmine";
 
 interface winnerOutput {
   //X, O, null
@@ -56,6 +55,21 @@ async function createAGame(id: string, name: string) {
   return json;
 }
 
+//join game
+async function joinAGame(id: string, name: string) {
+  //get response from fetch (post request) -> same as calling curl curl http://localhost:4000/game/1/move
+  const response = await fetch(`${serverPath}/game/join`, {
+    method: "POST",
+    body: JSON.stringify({ id, name }),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  const json = await response.json();
+  console.log(json);
+  return json;
+}
+
 //async join lobby
 
 function Lobby() {
@@ -76,6 +90,9 @@ function Lobby() {
   //   }, []);
 
   const [playerName, setPlayerName] = useAtom(playerNameAtom);
+  const [gameToAddID, setGameToAddID] = useAtom(gameIDToAdd);
+
+  const [currentgameID, setCurrentGame] = useAtom(currentGameID);
   const params = useParams();
   console.log(params);
 
@@ -84,17 +101,21 @@ function Lobby() {
 
   return (
     <>
+      YOU ARE: {playerName}
       <div className="flex justify-center">
         <div className="flex-col">
-          <button
-            className="btn m-2 btn-info btn-lg w-44 hover:bg-gray-300 bg-gray-200"
-            onClick={() => {
-              createAGame("6", currentPlayer);
-            }}
-          >
-            Create Game
-          </button>
-
+          <Link to={`/game/${gameToAddID}`}>
+            <button
+              className="btn m-2 btn-info btn-lg w-44 hover:bg-gray-300 bg-gray-200"
+              onClick={() => {
+                createAGame(gameToAddID.toString(), playerName);
+                setCurrentGame(gameToAddID.toString());
+                setGameToAddID(gameToAddID + 1);
+              }}
+            >
+              Create Game
+            </button>
+          </Link>
           <div>
             {games.map((game, index) => (
               <div className="collapse collapse-arrow bg-base-200">
@@ -105,18 +126,18 @@ function Lobby() {
                 <div className="collapse-content">
                   <div className="flex flex-row items-center">
                     <div className="flex align-middle">{game.id}</div>
-                    <div className="flex align-middle">
-                      YOU ARE: {playerName}
-                    </div>
+                  </div>
+                  <Link to={`/game/${game?.id}`}>
                     <button
                       className="btn m-2 btn-info btn-sm w-34 hover:bg-gray-300 bg-gray-200"
                       onClick={() => {
-                        <Link to={"/game/:gameId"}></Link>;
+                        setCurrentGame(game?.id);
+                        joinAGame(game?.id, playerName);
                       }}
                     >
                       {"Join Game with:" + game.player1}
                     </button>
-                  </div>
+                  </Link>
                 </div>
               </div>
             ))}
