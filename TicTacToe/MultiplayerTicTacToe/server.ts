@@ -34,40 +34,52 @@ export type Game = {
     player2: player,
 }
 
+let players = [];
+
+players.push("Jack")
+
+players.push("Jill")
+
+players.push("Ben")
+
+players.push("Bob")
+players.push("Eric")
+
+
 let games = {
-    ["1"]: {
-        id: "1",
-        board: emptyBoard,
-        currentPlayer: "X",
-        winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
-        winPiece: "",
-        winOutcome: "",
-        winPlayer: "",
-        player1: { token: "X", id: "" },
-        player2: { token: "O", id: "" },
-    },
-    ["2"]: {
-        id: "2",
-        board: emptyBoard,
-        currentPlayer: "X",
-        winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
-        winPiece: "",
-        winOutcome: "",
-        winPlayer: "",
-        player1: { token: "X", id: "" },
-        player2: { token: "O", id: "" },
-    },
-    ["3"]: {
-        id: "3",
-        board: emptyBoard,
-        currentPlayer: "X",
-        winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
-        winPiece: "",
-        winOutcome: "",
-        winPlayer: "",
-        player1: { token: "X", id: "" },
-        player2: { token: "O", id: "" },
-    },
+    // ["1"]: {
+    //     id: "1",
+    //     board: emptyBoard,
+    //     currentPlayer: "X",
+    //     winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
+    //     winPiece: "",
+    //     winOutcome: "",
+    //     winPlayer: "",
+    //     player1: "Jack",
+    //     player2: "Jill"
+    // },
+    // ["2"]: {
+    //     id: "2",
+    //     board: emptyBoard,
+    //     currentPlayer: "X",
+    //     winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
+    //     winPiece: "",
+    //     winOutcome: "",
+    //     winPlayer: "",
+    //     player1: "Ben",
+    //     player2: "Bob"
+    // },
+    // ["3"]: {
+    //     id: "3",
+    //     board: emptyBoard,
+    //     currentPlayer: "X",
+    //     winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
+    //     winPiece: "",
+    //     winOutcome: "",
+    //     winPlayer: "",
+    //     player1: "Eric",
+    //     player2: ""
+    // },
 };
 
 app.get("/", (req, res) => {
@@ -150,13 +162,43 @@ function checkWinState(b: typeof emptyBoard): winnerOutput {
     return { winningPiece, winningOutcome };
 }
 
-app.post("/game/:id/move", (req, res) => {
+app.post("/game/create", (req, res) => {
     //get game
-    const id = req.params.id;
-    const game = games[id];
+    const id = req.body.id;
+    const name = req.body.name;
+    let game = games[id];
 
-    //get index of move
-    const { index } = req.body;
+
+
+    // If no game is found
+    if (!game) {
+        games = {
+            [id]: {
+                id: id,
+                board: ["", "", "", "", "", "", "", "", ""],
+                currentPlayer: "X",
+                winnerOutput: { winningPiece: null, winningOutcome: null }, // { outcome: "WIN" | "TIE" | null, winner: "X" | "O" | null },
+                winPiece: "",
+                winOutcome: "",
+                winPlayer: "",
+                player1: name,
+                player2: ""
+            }, ...games
+        }
+
+    }
+
+
+
+    res.json({ game });
+})
+
+app.post("/game/join", (req, res) => {
+    //get game
+    const id = req.body.id;
+    const player2Name = req.body.name;
+    let game = games[id];
+
 
 
     // If no game is found
@@ -164,12 +206,62 @@ app.post("/game/:id/move", (req, res) => {
         return res.status(404).send("Game not found");
     }
 
-    //place player on square
-    const player = game.currentPlayer;
-    game.board[index] = player;
+    games[id].player2 = player2Name
 
-    //toggle player
-    game.currentPlayer = player === "X" ? "O" : "X";
+
+
+    res.json({ game });
+})
+
+app.post("/game/:id/move", (req, res) => {
+    //get game
+    const id = req.body.id;
+    const game = games[id];
+    const currentPlayerName = req.body.playerName;
+
+    console.log(currentPlayerName)
+
+
+    //get index of move
+    const index = req.body.index;
+
+
+    // If no game is found
+    if (!game) {
+        return res.status(404).send("Game not found");
+    }
+
+
+    if (game.currentPlayer === "X") {
+
+        if (currentPlayerName === game.player1) {
+
+            //place player on square
+            const player = game.currentPlayer;
+            game.board[index] = player;
+
+            //toggle player
+            game.currentPlayer = player === "X" ? "O" : "X";
+
+        }
+
+    }
+    if (game.currentPlayer === "O") {
+
+        if (currentPlayerName === game.player2) {
+
+            //place player on square
+            const player = game.currentPlayer;
+            game.board[index] = player;
+
+            //toggle player
+            game.currentPlayer = player === "X" ? "O" : "X";
+
+        }
+
+    }
+
+
 
     const output = checkWinState(game.board);
 
@@ -177,7 +269,6 @@ app.post("/game/:id/move", (req, res) => {
     game.winnerOutput = output
     game.winPiece = game.winnerOutput.winningPiece
     game.winOutcome = game.winnerOutput.winningOutcome
-    console.log(game.winPiece)
     if (game.winnerOutput.winningOutcome === "WIN") {
         if (game.winPiece === "X") {
 
@@ -190,7 +281,6 @@ app.post("/game/:id/move", (req, res) => {
         }
 
     }
-    console.log("game.winplayer, ", game.winPlayer)
 
     //return game state
     res.json({ game });

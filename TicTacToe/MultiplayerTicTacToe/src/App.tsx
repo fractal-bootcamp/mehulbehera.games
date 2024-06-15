@@ -2,6 +2,8 @@ import { MouseEvent, MouseEventHandler, useEffect, useState } from "react";
 import "./App.css";
 import { Game } from "../server";
 import { Link } from "react-router-dom";
+import { useAtom } from "jotai";
+import { currentGameID, playerNameAtom } from "./state";
 
 const emptyBoard: string[] = ["", "", "", "", "", "", "", "", ""];
 const serverPath = "http://localhost:4000";
@@ -65,17 +67,22 @@ export function checkWinState(b: typeof emptyBoard): winnerOutput {
 //get game by id
 async function getGame(id: string) {
   //get response from fetch (get request) -> same as calling curl http://localhost:4000/game/1
+  console.log("id from app.tsx", id);
   const response = await fetch(`${serverPath}/game/${id}`);
   const json = await response.json();
   return json;
 }
 
 //make a move
-async function makeAMove(id: string, index: number) {
+async function makeAMove(id: string, index: number, playerName: string) {
   //get response from fetch (post request) -> same as calling curl curl http://localhost:4000/game/1/move
+
+  console.log("id from MakeAMove, ", id);
+  console.log("index from MakeAMove, ", index);
+
   const response = await fetch(`${serverPath}/game/${id}/move`, {
     method: "POST",
-    body: JSON.stringify({ index }),
+    body: JSON.stringify({ id, index, playerName }),
     headers: {
       "Content-Type": "application/json",
     },
@@ -93,6 +100,9 @@ async function resetGame(id: string) {
 
 function App() {
   const [winner, setWinner] = useState("");
+  const [playerName, setPlayerName] = useAtom(playerNameAtom);
+
+  const [currentgameID, setCurrentGame] = useAtom(currentGameID);
 
   //numWins: {X Wins: 0, Ties, O Wins}
   const [numXWins, setXWins] = useState(0);
@@ -111,10 +121,11 @@ function App() {
   useEffect(() => {
     async function initializeGame() {
       // Go get the game
-      const data = await getGame(gameId);
+      const data = await getGame(currentgameID);
 
       // store the game in state
       setGame(data.game);
+      console.log(game);
     }
 
     // call the function
@@ -212,6 +223,7 @@ function App() {
   return (
     <>
       <div className="flex flex-row gap-5">
+        <h2>You are Player: {playerName}</h2>
         <div>
           <section className="grid grid-cols-3 gap-1 max-w-2xl aspect-square place-items-center">
             {game?.board.map((tile, index) => (
@@ -223,7 +235,8 @@ function App() {
                 id={index.toString()}
                 disabled={hasWon}
                 onClick={() => {
-                  makeAMove(gameId, index), setProgress(progress + 1 / 9);
+                  makeAMove(game?.id, index, playerName),
+                    setProgress(progress + 1 / 9);
                 }}
               >
                 {tile}
@@ -263,7 +276,7 @@ function App() {
           <button
             className="btn m-2 btn-info btn-lg w-44 hover:bg-gray-300 bg-gray-200"
             onClick={() => {
-              resetGame(gameId);
+              resetGame(game?.id);
               setProgress(0);
             }}
           >
